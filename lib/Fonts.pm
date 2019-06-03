@@ -24,7 +24,7 @@ my @fonts = (
     0xF0, 0x80, 0xF0, 0x80, 0x80  # F
 );
 
-sub get_font {
+sub get_font_byte {
     my ($i) = @_;
     return $fonts[$i];
 }
