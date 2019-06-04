@@ -14,10 +14,63 @@ my $index = 0;#16-bit index register
 my $opcode = 0;
 my $pc = 0;#16-bit program counter
 my @stack = ();#stack pointer
+my ($vx, $vy);#registers adresses
 
 my $should_draw = 0;#boolean value
 
-my %func_map = ();
+my %func_map = (
+    0x0000 => \&_0ZZZ,
+    0x00e0 => \&_0ZZ0,
+    0x00ee => \&_0ZZE,
+    0x1000 => \&_1ZZZ,
+);
+
+#chip8 instructions
+sub _0ZZZ {
+    my $extracted_op = $opcode & 0xf0ff;
+    #we must regard for errors
+    $func_map{$extracted_op}();
+}
+
+sub _0ZZ0 {
+    say "Clears screen";
+    #maybe just fill the array with zeroes without creating another
+    @display_buffer = (0) x (64 * 32);
+    $should_draw = 1;
+}
+
+sub _0ZZE {
+    say "returns from subroutine";
+    $pc = pop @stack;
+}
+
+sub _1ZZZ {
+    say "jumps to address NNN";
+    $pc = $opcode & 0x0fff;
+}
+
+sub _4ZZZ {
+    say "Skips the next instruction if VX doesn't equal NN.";
+    $pc += 2 if $gpio[$vx] != ($opcode & 0x00ff);
+}
+
+sub _5ZZZ {
+    say "Skips the next instruction if Vx == Vy";
+    $pc += 2 if $gpio[$vx] == $gpio[$vy];
+}
+
+sub _8ZZ4 {
+    say "Adds VY to VX. VF is set to 1 when there's a carry, and to 0 when there isn't.";
+    if ($gpio[$vx] + $gpio[$vy] > 0xff) {
+        $gpio[0xf] = 1;
+    }
+    else {
+        $gpio[0xf] = 0;
+    }
+    $gpio[$vx] += $gpio[$vy];
+    $gpio[$vx] &= 0xff;
+    
+}
 
 sub clear {
     #clear screen here
@@ -41,8 +94,8 @@ sub load_rom {
 sub cycle {
     $opcode = $memory[$pc];
     
-    my $vx = ($opcode & 0x0f00) >> 8;
-    my $vy = ($opcode & 0x00f0) >> 4;
+    $vx = ($opcode & 0x0f00) >> 8;
+    $vy = ($opcode & 0x00f0) >> 4;
     
     
     #process the op code
