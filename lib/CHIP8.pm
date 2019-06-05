@@ -72,6 +72,55 @@ sub _8ZZ4 {
     
 }
 
+sub _8ZZ5 {
+    say "VY is subtracted from VX. VF is set to 0 when there's a borrow, and 1 when there isn't";
+    $gpio[0xf] = $gpio[$vy] > $gpio[$vx] ? 0 : 1;
+    
+    $gpio[$vx] = $gpio[$vx] - $gpio[$vy];
+    
+    $gpio[$vx] &= 0xff;
+}
+
+sub _FZ29 {
+    say "Set index to point to a character";
+    $index = (5 * $gpio[$vx]) & 0xfff;
+}
+
+sub _DZZZ {
+    say "Draw sprite...";
+    $gpio[0xf] = 0;
+    my $x = $gpio[$vx] & 0xff;
+    my $y = $gpio[$vy] & 0xff;
+    
+    my $height = $opcode & 0x000f;
+    
+    $row = 0;
+    while ($row < $height) {
+        my $curr_row = $memory[$row + $index];
+        my $pixel_offset = 0;
+        while ($pixel_offset < 8) {
+            my $loc = $x + $pixel_offset + (($y + $row) * 64);
+            $pixel_offset += 1;
+            if (($y + $row) >= 32 || ($x + $pixel_offset - 1) >= 64) {
+                #ignore pixels outside of screen
+                next;
+            }
+            my $mask = 1 << 8 - $pixel_offset;
+            $curr_pixel = ($curr_row & $mask) >> (8 - $pixel_offset);
+            $display_buffer[$loc] ^= $curr_pixel;
+            if ($display_buffer[$loc] == 0) {
+                $gpio[0xf] = 1;
+            }
+            else {
+                $gpio[0xf] = 0;
+            }
+        }
+        $row += 1;
+    }
+    $should_draw = 1;
+    
+}
+
 sub clear {
     #clear screen here
 }
