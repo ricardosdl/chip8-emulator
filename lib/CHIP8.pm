@@ -15,6 +15,7 @@ my $opcode = 0;
 my $pc = 0;#16-bit program counter
 my @stack = ();#stack pointer
 my ($vx, $vy);#registers adresses
+my $LOGGING = 1;
 
 my $should_draw = 0;#boolean value
 
@@ -25,6 +26,11 @@ my %func_map = (
     0x1000 => \&_1ZZZ,
 );
 
+sub log_message {
+    my ($message) = @_;
+    say $message if $LOGGING;
+}
+
 #chip8 instructions
 sub _0ZZZ {
     my $extracted_op = $opcode & 0xf0ff;
@@ -33,34 +39,38 @@ sub _0ZZZ {
 }
 
 sub _0ZZ0 {
-    say "Clears screen";
+    log_message("Clears screen");
     #maybe just fill the array with zeroes without creating another
     @display_buffer = (0) x (64 * 32);
     $should_draw = 1;
 }
 
 sub _0ZZE {
-    say "returns from subroutine";
+    log_message("returns from subroutine");
     $pc = pop @stack;
 }
 
 sub _1ZZZ {
-    say "jumps to address NNN";
+    log_message("jumps to address NNN");
     $pc = $opcode & 0x0fff;
 }
 
+sub _2ZZZ {
+    
+}
+
 sub _4ZZZ {
-    say "Skips the next instruction if VX doesn't equal NN.";
+    log_message("Skips the next instruction if VX doesn't equal NN.");
     $pc += 2 if $gpio[$vx] != ($opcode & 0x00ff);
 }
 
 sub _5ZZZ {
-    say "Skips the next instruction if Vx == Vy";
+    log_message("Skips the next instruction if Vx == Vy");
     $pc += 2 if $gpio[$vx] == $gpio[$vy];
 }
 
 sub _8ZZ4 {
-    say "Adds VY to VX. VF is set to 1 when there's a carry, and to 0 when there isn't.";
+    log_message("Adds VY to VX. VF is set to 1 when there's a carry, and to 0 when there isn't.");
     if ($gpio[$vx] + $gpio[$vy] > 0xff) {
         $gpio[0xf] = 1;
     }
@@ -73,7 +83,7 @@ sub _8ZZ4 {
 }
 
 sub _8ZZ5 {
-    say "VY is subtracted from VX. VF is set to 0 when there's a borrow, and 1 when there isn't";
+    log_message("VY is subtracted from VX. VF is set to 0 when there's a borrow, and 1 when there isn't");
     $gpio[0xf] = $gpio[$vy] > $gpio[$vx] ? 0 : 1;
     
     $gpio[$vx] = $gpio[$vx] - $gpio[$vy];
@@ -82,19 +92,19 @@ sub _8ZZ5 {
 }
 
 sub _FZ29 {
-    say "Set index to point to a character";
+    log_message("Set index to point to a character");
     $index = (5 * $gpio[$vx]) & 0xfff;
 }
 
 sub _DZZZ {
-    say "Draw sprite...";
+    log_message("Draw sprite...");
     $gpio[0xf] = 0;
     my $x = $gpio[$vx] & 0xff;
     my $y = $gpio[$vy] & 0xff;
     
     my $height = $opcode & 0x000f;
     
-    $row = 0;
+    my $row = 0;
     while ($row < $height) {
         my $curr_row = $memory[$row + $index];
         my $pixel_offset = 0;
@@ -106,7 +116,7 @@ sub _DZZZ {
                 next;
             }
             my $mask = 1 << 8 - $pixel_offset;
-            $curr_pixel = ($curr_row & $mask) >> (8 - $pixel_offset);
+            my $curr_pixel = ($curr_row & $mask) >> (8 - $pixel_offset);
             $display_buffer[$loc] ^= $curr_pixel;
             if ($display_buffer[$loc] == 0) {
                 $gpio[0xf] = 1;
@@ -127,7 +137,7 @@ sub clear {
 
 sub load_rom {
     my ($rom_path) = @_;
-    say "Loading $rom_path...";
+    log_message("Loading $rom_path...");
     open my $rom_file, '<:raw', $rom_path or die "Could not open rom file: $!";
     my $i = 0;
     while (1) {
@@ -157,7 +167,7 @@ sub cycle {
         $func_map{$extracted_op}();
     }
     else {
-        say "Unknown instruction: $opcode";
+        log_message("Unknown instruction: $opcode");
     }
     
     #decrement timers
