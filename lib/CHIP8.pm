@@ -4,6 +4,9 @@ use warnings;
 use 5.010;
 use Fonts;
 
+use Exporter qw(import);
+our @EXPORT = qw (initialize _7ZZZ);
+
 my @key_inputs = (0) x 16;
 my @display_buffer = (0) x (64 * 32);
 my @memory = (0) x 4096;
@@ -59,6 +62,11 @@ sub _2ZZZ {
     
 }
 
+sub _3ZZZ {
+    log_message("Skips the next instruction if Vx equals NN.");
+    $pc += 2 if $gpio[$vx] == ($opcode & 0x00ff);
+}
+
 sub _4ZZZ {
     log_message("Skips the next instruction if VX doesn't equal NN.");
     $pc += 2 if $gpio[$vx] != ($opcode & 0x00ff);
@@ -67,6 +75,16 @@ sub _4ZZZ {
 sub _5ZZZ {
     log_message("Skips the next instruction if Vx == Vy");
     $pc += 2 if $gpio[$vx] == $gpio[$vy];
+}
+
+sub _6ZZZ {
+    log_message("Sets Vx to NN");
+    $gpio[$vx] = $opcode & 0xff;
+}
+
+sub _7ZZZ {
+    log_message("Adds NN to Vx");
+    $gpio[$vx] += $opcode & 0xff;
 }
 
 sub _8ZZ4 {
@@ -135,7 +153,7 @@ sub clear {
     #clear screen here
 }
 
-sub load_rom {
+sub load_rom_from_file {
     my ($rom_path) = @_;
     log_message("Loading $rom_path...");
     open my $rom_file, '<:raw', $rom_path or die "Could not open rom file: $!";
@@ -148,6 +166,17 @@ sub load_rom {
         last if not $read_bytes;
     }
     close $rom_file;
+}
+
+sub load_rom_from_array {
+    my @bytes_array = @_;
+    my $size = @bytes_array;
+    log_message("Loading from array of bytes, array size: $size bytes");
+    my $i = 0;
+    foreach my $byte (@bytes_array) {
+        $memory[$i + 0x200] = $byte;
+        $i++;
+    }
 }
 
 sub cycle {
