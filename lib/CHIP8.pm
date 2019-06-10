@@ -5,7 +5,7 @@ use 5.010;
 use Fonts;
 
 use Exporter qw(import);
-our @EXPORT = qw (initialize _7ZZZ);
+our @EXPORT = qw (get_register_value set_register_value initialize _7ZZZ);
 
 my @key_inputs = (0) x 16;
 my @display_buffer = (0) x (64 * 32);
@@ -27,11 +27,22 @@ my %func_map = (
     0x00e0 => \&_0ZZ0,
     0x00ee => \&_0ZZE,
     0x1000 => \&_1ZZZ,
+    0x7000 => \&_7ZZZ
 );
 
 sub log_message {
     my ($message) = @_;
     say $message if $LOGGING;
+}
+
+sub get_register_value {
+    my ($register) = @_;
+    return $gpio[$register];
+}
+
+sub set_register_value {
+    my ($register, $value) = @_;
+    $gpio[$register] = $value;
 }
 
 #chip8 instructions
@@ -83,8 +94,9 @@ sub _6ZZZ {
 }
 
 sub _7ZZZ {
-    log_message("Adds NN to Vx");
-    $gpio[$vx] += $opcode & 0xff;
+    my $nn = $opcode & 0x00ff;
+    log_message("Adds NN($nn) to Vx($vx)");
+    $gpio[$vx] += $nn;
 }
 
 sub _8ZZ4 {
@@ -180,7 +192,7 @@ sub load_rom_from_array {
 }
 
 sub cycle {
-    $opcode = $memory[$pc];
+    $opcode = ($memory[$pc] << 8) | $memory[$pc + 1];
     
     $vx = ($opcode & 0x0f00) >> 8;
     $vy = ($opcode & 0x00f0) >> 4;
