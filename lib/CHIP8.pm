@@ -5,7 +5,11 @@ use 5.010;
 use Fonts;
 
 use Exporter qw(import);
-our @EXPORT = qw (get_register_value set_register_value initialize _7ZZZ);
+our @EXPORT = qw (get_register_value set_register_value initialize
+    _6ZZZ
+    _7ZZZ
+    _8ZZ0
+    _8ZZ1);
 
 my @key_inputs = (0) x 16;
 my @display_buffer = (0) x (64 * 32);
@@ -27,7 +31,11 @@ my %func_map = (
     0x00e0 => \&_0ZZ0,
     0x00ee => \&_0ZZE,
     0x1000 => \&_1ZZZ,
-    0x7000 => \&_7ZZZ
+    0x6000 => \&_6ZZZ,
+    0x7000 => \&_7ZZZ,
+    0x8000 => \&_8ZZZ,
+    0x8FF0 => \&_8ZZ0,
+    0x8FF1 => \&_8ZZ1,
 );
 
 sub log_message {
@@ -97,6 +105,24 @@ sub _7ZZZ {
     my $nn = $opcode & 0x00ff;
     log_message("Adds NN($nn) to Vx($vx)");
     $gpio[$vx] += $nn;
+}
+
+sub _8ZZZ {
+    my $extracted_op = $opcode & 0xf00f;
+    $extracted_op += 0xff0;
+    #look for errors
+    $func_map{$extracted_op}();
+}
+
+sub _8ZZ0 {
+    log_message("Sets Vx to the value of Vy");
+    $gpio[$vx] = $gpio[$vy];
+    #$gpio[$vx] &= 0xff;
+}
+
+sub _8ZZ1 {
+    log_message("Sets Vx to Vx or Vy");
+    $gpio[$vx] |= $gpio[$vy];
 }
 
 sub _8ZZ4 {
