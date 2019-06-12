@@ -12,7 +12,8 @@ our @EXPORT = qw (get_register_value set_register_value initialize
     _8ZZ1
     _8ZZ2
     _8ZZ3
-    _8ZZ4);
+    _8ZZ4
+    _8ZZ5);
 
 my @key_inputs = (0) x 16;
 my @display_buffer = (0) x (64 * 32);

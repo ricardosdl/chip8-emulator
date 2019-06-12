@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use 5.010;
  
-use Test::Simple tests => 9;
+use Test::Simple tests => 10;
  
 use CHIP8 qw(get_register_value initialize
     _6ZZZ
@@ -11,7 +11,8 @@ use CHIP8 qw(get_register_value initialize
     _8ZZ1
     _8ZZ2
     _8ZZ3
-    _8ZZ4);
+    _8ZZ4
+    _8ZZ5);
     
 sub test_6ZZZ {
     CHIP8::initialize;
@@ -152,6 +153,11 @@ sub test_withcarry_8ZZ4 {
         (CHIP8::get_register_value(0xf) == 1);
 }
 
+sub test_8ZZ5 {
+    
+    return 0;
+}
+
 ok(test_6ZZZ);
 ok(test_1_7ZZZ);
 ok(test_2_7ZZZ);
@@ -161,3 +167,4 @@ ok(test_8ZZ2);
 ok(test_8ZZ3);
 ok(test_nocarry_8ZZ4);
 ok(test_withcarry_8ZZ4);
+ok(test_8ZZ5);
