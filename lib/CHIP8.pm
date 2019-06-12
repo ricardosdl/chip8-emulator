@@ -122,6 +122,7 @@ sub _7ZZZ {
     my $nn = $opcode & 0x00ff;
     log_message("Adds NN($nn) to Vx($vx)");
     $gpio[$vx] += $nn;
+    $gpio[$vx] &= 0xff;
 }
 
 sub _8ZZZ {

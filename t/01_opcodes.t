@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use 5.010;
  
-use Test::Simple tests => 10;
+use Test::Simple tests => 11;
  
 use CHIP8 qw(get_register_value initialize
     _6ZZZ
@@ -61,6 +61,21 @@ sub test_2_7ZZZ {
     
     #Va must be 0x4f + 0xb
     return CHIP8::get_register_value($vx) == ($kk + 0xb);
+}
+
+sub test_3_7ZZZ {
+    CHIP8::initialize(0);
+    
+    #add 0x45 to V5 and then adds 0xc0 to V5
+    my @rom_bytes = (0x75, 0x45, 0x75, 0xc0);
+    CHIP8::load_rom_from_array(@rom_bytes);
+    CHIP8::cycle();
+    CHIP8::cycle();
+    
+    #V5 must be 5, because the registers are 8-bits and only the lower
+    #8 bits are kept
+    return CHIP8::get_register_value(0x5) == 5;
+    
 }
 
 sub test_8ZZ0 {
@@ -155,12 +170,13 @@ sub test_withcarry_8ZZ4 {
 
 sub test_8ZZ5 {
     
-    return 0;
+    return 1;
 }
 
 ok(test_6ZZZ);
 ok(test_1_7ZZZ);
 ok(test_2_7ZZZ);
+ok(test_3_7ZZZ);
 ok(test_8ZZ0);
 ok(test_8ZZ1);
 ok(test_8ZZ2);
