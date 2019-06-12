@@ -9,7 +9,10 @@ our @EXPORT = qw (get_register_value set_register_value initialize
     _6ZZZ
     _7ZZZ
     _8ZZ0
-    _8ZZ1);
+    _8ZZ1
+    _8ZZ2
+    _8ZZ3
+    _8ZZ4);
 
 my @key_inputs = (0) x 16;
 my @display_buffer = (0) x (64 * 32);
@@ -36,7 +39,20 @@ my %func_map = (
     0x8000 => \&_8ZZZ,
     0x8FF0 => \&_8ZZ0,
     0x8FF1 => \&_8ZZ1,
+    0x8FF2 => \&_8ZZ2,
+    0x8FF3 => \&_8ZZ3,
+    0x8FF4 => \&_8ZZ4,
 );
+
+sub logging {
+    my ($new_logging) = @_;
+    my $old_logging = $LOGGING;
+    if (defined $new_logging) {
+        $LOGGING = $new_logging;
+        return $old_logging;
+    }
+    return $LOGGING;
+}
 
 sub log_message {
     my ($message) = @_;
@@ -123,6 +139,16 @@ sub _8ZZ0 {
 sub _8ZZ1 {
     log_message("Sets Vx to Vx or Vy");
     $gpio[$vx] |= $gpio[$vy];
+}
+
+sub _8ZZ2 {
+    log_message("Set Vx = Vx AND Vy.");
+    $gpio[$vx] &= $gpio[$vy];
+}
+
+sub _8ZZ3 {
+    log_message('Set Vx = Vx XOR Vy.');
+    $gpio[$vx] ^= $gpio[$vy];
 }
 
 sub _8ZZ4 {
@@ -253,6 +279,10 @@ sub cycle {
 
 
 sub initialize {
+    my ($logging) = @_;
+    if (defined $logging) {
+        $LOGGING = $logging;
+    }
     clear;
     @memory = (0) x 4096;
     @gpio = (0) x 16;
