@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use 5.010;
  
-use Test::Simple tests => 8;
+use Test::Simple tests => 9;
  
 use CHIP8 qw(get_register_value initialize
     _6ZZZ
@@ -23,7 +23,7 @@ sub test_6ZZZ {
     return CHIP8::get_register_value(0x5) == 0x2a;
 }
 
-sub test1_7ZZZ {
+sub test_1_7ZZZ {
     my $op = 0x7;#7 - the op code
     my $vx = 0xa;#10 - the register
     my $kk = 0x4f;#79 - the value of the operation
@@ -41,7 +41,7 @@ sub test1_7ZZZ {
     return CHIP8::get_register_value($vx) == $kk;
 }
 
-sub test2_7ZZZ {
+sub test_2_7ZZZ {
     my $op = 0x7;#7 - the op code
     my $vx = 0xa;#10 - the register
     my $kk = 0x4f;#79 - the value of the operation
@@ -120,7 +120,7 @@ sub test_8ZZ3 {
     
 }
 
-sub test_8ZZ4 {
+sub test_nocarry_8ZZ4 {
     CHIP8::initialize(0);
     
     #puts the value 0x2a in Va, then puts the value 0x27 in Ve,
@@ -133,30 +133,31 @@ sub test_8ZZ4 {
     CHIP8::logging(1);
     CHIP8::cycle;
     
-    my $test1 = (CHIP8::get_register_value(0xa) == 0x51) &&
+    return (CHIP8::get_register_value(0xa) == 0x51) &&
         (CHIP8::get_register_value(0xf) == 0);
-    
+}
+
+sub test_withcarry_8ZZ4 {
     CHIP8::initialize(0);
     #puts the value 0xc1 in Vb, then puts the value 0x45 in Vd,
     #and then Vb = Vb + Vd, the carry (if any) is set in Vf
-    @rom_bytes = (0x6b, 0xc1, 0x6d, 0x45, 0x8b, 0xd4);
+    my @rom_bytes = (0x6b, 0xc1, 0x6d, 0x45, 0x8b, 0xd4);
     CHIP8::load_rom_from_array(@rom_bytes);
     CHIP8::cycle;
     CHIP8::cycle;
     CHIP8::logging(1);
     CHIP8::cycle;
     
-    my $test2 = (CHIP8::get_register_value(0xb) == 0x6) &&
+    return (CHIP8::get_register_value(0xb) == 0x6) &&
         (CHIP8::get_register_value(0xf) == 1);
-    
-    return $test1 && $test2;
 }
 
 ok(test_6ZZZ);
-ok(test1_7ZZZ);
-ok(test2_7ZZZ);
+ok(test_1_7ZZZ);
+ok(test_2_7ZZZ);
 ok(test_8ZZ0);
 ok(test_8ZZ1);
 ok(test_8ZZ2);
 ok(test_8ZZ3);
-ok(test_8ZZ4);
+ok(test_nocarry_8ZZ4);
+ok(test_withcarry_8ZZ4);
