@@ -13,7 +13,8 @@ our @EXPORT = qw (get_register_value set_register_value initialize
     _8ZZ2
     _8ZZ3
     _8ZZ4
-    _8ZZ5);
+    _8ZZ5
+    _8ZZ6);
 
 my @key_inputs = (0) x 16;
 my @display_buffer = (0) x (64 * 32);
@@ -43,6 +44,8 @@ my %func_map = (
     0x8FF2 => \&_8ZZ2,
     0x8FF3 => \&_8ZZ3,
     0x8FF4 => \&_8ZZ4,
+    0x8FF5 => \&_8ZZ5,
+    0x8FF6 => \&_8ZZ6
 );
 
 sub logging {
@@ -168,11 +171,17 @@ sub _8ZZ4 {
 
 sub _8ZZ5 {
     log_message("VY is subtracted from VX. VF is set to 0 when there's a borrow, and 1 when there isn't");
-    $gpio[0xf] = $gpio[$vy] > $gpio[$vx] ? 0 : 1;
+    $gpio[0xf] = $gpio[$vx] > $gpio[$vy] ? 1 : 0;
     
     $gpio[$vx] = $gpio[$vx] - $gpio[$vy];
     
     $gpio[$vx] &= 0xff;
+}
+
+sub _8ZZ6 {
+    log_message('Set Vx = Vx SHR 1.  VF is set to the value of the least significant bit of VX before the shift.');
+    $gpio[0xf] = $gpio[$vx] & 0x0001;
+    $gpio[$vx] = $gpio[$vx] >> 1;
 }
 
 sub _FZ29 {

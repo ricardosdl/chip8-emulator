@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use 5.010;
  
-use Test::Simple tests => 11;
+use Test::Simple tests => 14;
  
 use CHIP8 qw(get_register_value initialize
     _6ZZZ
@@ -12,7 +12,8 @@ use CHIP8 qw(get_register_value initialize
     _8ZZ2
     _8ZZ3
     _8ZZ4
-    _8ZZ5);
+    _8ZZ5
+    _8ZZ6);
     
 sub test_6ZZZ {
     CHIP8::initialize;
@@ -168,9 +169,60 @@ sub test_withcarry_8ZZ4 {
         (CHIP8::get_register_value(0xf) == 1);
 }
 
-sub test_8ZZ5 {
+sub test_1_8ZZ5 {
+    CHIP8::initialize(0);
     
-    return 1;
+    #puts the value 0xd in V8, then puts the value 0xb in V7,
+    #and then V8 = V8 - V7
+    my @rom_bytes = (0x68, 0xd, 0x67, 0xb, 0x88, 0x75);
+    CHIP8::load_rom_from_array(@rom_bytes);
+    CHIP8::cycle;
+    CHIP8::cycle;
+    CHIP8::logging(1);
+    CHIP8::cycle;
+    
+    return (CHIP8::get_register_value(0x8) == 2) && (CHIP8::get_register_value(0xf) == 1);
+}
+
+sub test_2_8ZZ5 {
+    CHIP8::initialize(0);
+    
+    #puts the value 0xf2 in V8, then puts the value 0xff in V7,
+    #and then V8 = V8 - V7
+    my @rom_bytes = (0x68, 0xf2, 0x67, 0xff, 0x88, 0x75);
+    CHIP8::load_rom_from_array(@rom_bytes);
+    CHIP8::cycle;
+    CHIP8::cycle;
+    CHIP8::logging(1);
+    CHIP8::cycle;
+    
+    return (CHIP8::get_register_value(0x8) == 243) && (CHIP8::get_register_value(0xf) == 0);
+}
+
+sub test_1_8ZZ6 {
+    CHIP8::initialize(0);
+    
+    #puts the value 0xf2 in V3, and then V3 = V3 >> 1
+    my @rom_bytes = (0x63, 0xf2, 0x83, 0x6);
+    CHIP8::load_rom_from_array(@rom_bytes);
+    CHIP8::cycle;
+    CHIP8::logging(1);
+    CHIP8::cycle;
+    return (CHIP8::get_register_value(0x3) == 121) &&
+        (CHIP8::get_register_value(0xf) == 0);
+}
+
+sub test_2_8ZZ6 {
+    CHIP8::initialize(0);
+    
+    #puts the value 0xf3 in V3, and then V3 = V3 >> 1
+    my @rom_bytes = (0x63, 0xf3, 0x83, 0x6);
+    CHIP8::load_rom_from_array(@rom_bytes);
+    CHIP8::cycle;
+    CHIP8::logging(1);
+    CHIP8::cycle;
+    return (CHIP8::get_register_value(0x3) == 121) &&
+        (CHIP8::get_register_value(0xf) == 1);
 }
 
 ok(test_6ZZZ);
@@ -183,4 +235,7 @@ ok(test_8ZZ2);
 ok(test_8ZZ3);
 ok(test_nocarry_8ZZ4);
 ok(test_withcarry_8ZZ4);
-ok(test_8ZZ5);
+ok(test_1_8ZZ5);
+ok(test_2_8ZZ5);
+ok(test_1_8ZZ6);
+ok(test_2_8ZZ6);
