@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use 5.010;
  
-use Test::Simple tests => 14;
+use Test::Simple tests => 16;
  
 use CHIP8 qw(get_register_value initialize
     _6ZZZ
@@ -13,7 +13,8 @@ use CHIP8 qw(get_register_value initialize
     _8ZZ3
     _8ZZ4
     _8ZZ5
-    _8ZZ6);
+    _8ZZ6
+    _8ZZ7);
     
 sub test_6ZZZ {
     CHIP8::initialize;
@@ -225,6 +226,44 @@ sub test_2_8ZZ6 {
         (CHIP8::get_register_value(0xf) == 1);
 }
 
+sub test_1_8ZZ7 {
+    CHIP8::initialize(0);
+    
+    #puts the value 0x67 in V4, then puts the value 0x78
+    #in V6, then V4 = V6 - V4
+    my @rom_bytes = (0x64, 0x67, 0x66, 0x78, 0x84, 0x67);
+    CHIP8::load_rom_from_array(@rom_bytes);
+    CHIP8::cycle;
+    CHIP8::cycle;
+    CHIP8::logging(1);
+    CHIP8::cycle;
+    
+    return (CHIP8::get_register_value(0x4) == 0x11) &&
+        (CHIP8::get_register_value(0xf) == 1);
+    
+    
+    return 0;
+}
+
+sub test_2_8ZZ7 {
+    CHIP8::initialize(0);
+    
+    #puts the value 0x78 in V4, then puts the value 0x69
+    #in V6, then V4 = V6 - V4
+    my @rom_bytes = (0x64, 0x78, 0x66, 0x69, 0x84, 0x67);
+    CHIP8::load_rom_from_array(@rom_bytes);
+    CHIP8::cycle;
+    CHIP8::cycle;
+    CHIP8::logging(1);
+    CHIP8::cycle;
+    
+    return (CHIP8::get_register_value(0x4) == 241) &&
+        (CHIP8::get_register_value(0xf) == 0);
+    
+    
+    return 0;
+}
+
 ok(test_6ZZZ);
 ok(test_1_7ZZZ);
 ok(test_2_7ZZZ);
@@ -239,3 +278,5 @@ ok(test_1_8ZZ5);
 ok(test_2_8ZZ5);
 ok(test_1_8ZZ6);
 ok(test_2_8ZZ6);
+ok(test_1_8ZZ7);
+ok(test_2_8ZZ7);
