@@ -47,7 +47,8 @@ my %func_map = (
     0x8FF4 => \&_8ZZ4,
     0x8FF5 => \&_8ZZ5,
     0x8FF6 => \&_8ZZ6,
-    0x8FF7 => \&_8ZZ7
+    0x8FF7 => \&_8ZZ7,
+    0x8FFE => \&_8ZZE,
 );
 
 sub logging {
@@ -190,6 +191,13 @@ sub _8ZZ7 {
     log_message("Set Vx = Vy - Vx, set VF = NOT borrow.");
     $gpio[0xf] = $gpio[$vy] > $gpio[$vx] ? 1 : 0;
     $gpio[$vx] = $gpio[$vy] - $gpio[$vx];
+    $gpio[$vx] &= 0xff;
+}
+
+sub _8ZZE {
+    log_messgae("Set Vx = Vx SHL 1. VF is set to the value of the most significant bit of VX before the shift");
+    $gpio[0xf] = $gpio[$vx] >> 7;
+    $gpio[$vx] = $gpio[$vx] << 1;
     $gpio[$vx] &= 0xff;
 }
 

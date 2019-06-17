@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use 5.010;
  
-use Test::Simple tests => 16;
+use Test::Simple tests => 17;
  
 use CHIP8 qw(get_register_value initialize
     _6ZZZ
@@ -264,6 +264,20 @@ sub test_2_8ZZ7 {
     return 0;
 }
 
+sub test_1_8ZZE {
+    CHIP8::initialize(0);
+    
+    #puts the value 0x43 in V7, then V7 = V7 SHL 1.
+    my @rom_bytes = (0x67, 0x43, 0x87, 0x0e);
+    CHIP8::cycle;
+    CHIP8::logging(1);
+    CHIP8::cycle;
+    
+    return (CHIP8::get_register_value(0x7) == 134 &&
+        CHIP8::get_register_value(0xf) == 0);
+    
+}
+
 ok(test_6ZZZ);
 ok(test_1_7ZZZ);
 ok(test_2_7ZZZ);
@@ -280,3 +294,4 @@ ok(test_1_8ZZ6);
 ok(test_2_8ZZ6);
 ok(test_1_8ZZ7);
 ok(test_2_8ZZ7);
+ok(test_1_8ZZE);
