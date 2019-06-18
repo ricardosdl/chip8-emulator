@@ -195,7 +195,7 @@ sub _8ZZ7 {
 }
 
 sub _8ZZE {
-    log_messgae("Set Vx = Vx SHL 1. VF is set to the value of the most significant bit of VX before the shift");
+    log_message("Set Vx = Vx SHL 1. VF is set to the value of the most significant bit of VX before the shift");
     $gpio[0xf] = $gpio[$vx] >> 7;
     $gpio[$vx] = $gpio[$vx] << 1;
     $gpio[$vx] &= 0xff;
