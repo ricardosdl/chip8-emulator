@@ -2,9 +2,9 @@ use strict;
 use warnings;
 use 5.010;
  
-use Test::Simple tests => 18;
+use Test::Simple tests => 23;
  
-use CHIP8 qw(get_register_value initialize
+use CHIP8 qw(get_register_value initialize get_pc_value
     _6ZZZ
     _7ZZZ
     _8ZZ0
@@ -294,6 +294,74 @@ sub test_2_8ZZE {
     
 }
 
+sub test_1_9ZZZ {
+    CHIP8::initialize(0);
+    
+    #puts the value 0x13 in V3, then puts the value 0x13 in VD then
+    #skips the next instruction if V3 != VD
+    my @rom_bytes = (0x63, 0x13, 0x6d, 0x13, 0x93, 0xd0);
+    CHIP8::load_rom_from_array(@rom_bytes);
+    CHIP8::cycle;
+    CHIP8::cycle;
+    CHIP8::logging(1);
+    my $old_pc_value = CHIP8::get_pc_value();
+    CHIP8::cycle;
+    
+    return CHIP8::get_pc_value() == ($old_pc_value + 2);  
+}
+
+sub test_2_9ZZZ {
+    CHIP8::initialize(0);
+    
+    #puts the value 0x13 in V3, then puts the value 0x66 in VD then
+    #skips the next instruction if V3 != VD
+    my @rom_bytes = (0x63, 0x13, 0x6d, 0x66, 0x93, 0xd0);
+    CHIP8::load_rom_from_array(@rom_bytes);
+    CHIP8::cycle;
+    CHIP8::cycle;
+    CHIP8::logging(1);
+    my $old_pc_value = CHIP8::get_pc_value();
+    CHIP8::cycle;
+    
+    return CHIP8::get_pc_value() == ($old_pc_value + 4);  
+}
+
+sub test_AZZZ {
+    CHIP8::initialize(1);
+    
+    #sets I (index) to the value 0x518
+    my @rom_bytes = (0xa5, 0x18);
+    CHIP8::load_rom_from_array(@rom_bytes);
+    CHIP8::cycle;
+    return CHIP8::get_index_value() == 0x518;
+}
+
+sub test_BZZZ {
+    CHIP8::initialize(0);
+    
+    #puts the value 0x40 in V0, then jumps to the address 0x628 + V0
+    my @rom_bytes = (0x60, 0x40, 0xB6, 0x28);
+    CHIP8::load_rom_from_array(@rom_bytes);
+    
+    CHIP8::cycle;
+    CHIP8::logging(1);
+    CHIP8::cycle;
+    
+    return CHIP8::get_pc_value() == 1640;
+}
+
+sub test_CZZZ {
+    CHIP8::initialize(1);
+    
+    #sets V5 to random byte and 0x67
+    my @rom_bytes = (0xc5, 0x67);
+    CHIP8::load_rom_from_array(@rom_bytes);
+    CHIP8::cycle;
+    
+    return (CHIP8::get_register_value(0x5) & 0x67) == CHIP8::get_register_value(0x5);
+    
+}
+
 ok(test_6ZZZ);
 ok(test_1_7ZZZ);
 ok(test_2_7ZZZ);
@@ -312,3 +380,8 @@ ok(test_1_8ZZ7);
 ok(test_2_8ZZ7);
 ok(test_1_8ZZE);
 ok(test_2_8ZZE);
+ok(test_1_9ZZZ);
+ok(test_2_9ZZZ);
+ok(test_AZZZ);
+ok(test_BZZZ);
+ok(test_CZZZ);

@@ -5,7 +5,8 @@ use 5.010;
 use Fonts;
 
 use Exporter qw(import);
-our @EXPORT = qw (get_register_value set_register_value initialize
+our @EXPORT = qw (get_register_value set_register_value get_pc_value initialize
+    get_index_value
     _6ZZZ
     _7ZZZ
     _8ZZ0
@@ -49,6 +50,10 @@ my %func_map = (
     0x8FF6 => \&_8ZZ6,
     0x8FF7 => \&_8ZZ7,
     0x8FFE => \&_8ZZE,
+    0x9000 => \&_9ZZZ,
+    0xA000 => \&_AZZZ,
+    0xB000 => \&_BZZZ,
+    0xC000 => \&_CZZZ,
 );
 
 sub logging {
@@ -74,6 +79,14 @@ sub get_register_value {
 sub set_register_value {
     my ($register, $value) = @_;
     $gpio[$register] = $value;
+}
+
+sub get_pc_value {
+    return $pc;
+}
+
+sub get_index_value {
+    return $index;
 }
 
 #chip8 instructions
@@ -198,6 +211,28 @@ sub _8ZZE {
     log_message("Set Vx = Vx SHL 1. VF is set to the value of the most significant bit of VX before the shift");
     $gpio[0xf] = $gpio[$vx] >> 7;
     $gpio[$vx] = $gpio[$vx] << 1;
+    $gpio[$vx] &= 0xff;
+}
+
+sub _9ZZZ {
+    log_message('Skip next instruction if Vx != Vy.');
+    $pc += 2 if $gpio[$vx] != $gpio[$vy];
+}
+
+sub _AZZZ {
+    log_message('Set I = nnn.');
+    $index = $opcode & 0x0fff;
+}
+
+sub _BZZZ {
+    log_message('Jump to location nnn + V0.');
+    $pc = ($opcode & 0x0fff) + $gpio[0];
+}
+
+sub _CZZZ {
+    log_message('Set Vx = random byte AND kk.');
+    my $random_byte = int rand(256);
+    $gpio[$vx] = $random_byte & ($opcode & 0xff);
     $gpio[$vx] &= 0xff;
 }
 
