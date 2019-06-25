@@ -362,6 +362,10 @@ sub test_CZZZ {
     
 }
 
+sub test_1_DZZZ {
+    return 0;
+}
+
 ok(test_6ZZZ);
 ok(test_1_7ZZZ);
 ok(test_2_7ZZZ);
@@ -385,3 +389,4 @@ ok(test_2_9ZZZ);
 ok(test_AZZZ);
 ok(test_BZZZ);
 ok(test_CZZZ);
+ok(test_1_DZZZ);

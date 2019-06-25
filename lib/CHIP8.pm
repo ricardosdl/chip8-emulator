@@ -54,6 +54,7 @@ my %func_map = (
     0xA000 => \&_AZZZ,
     0xB000 => \&_BZZZ,
     0xC000 => \&_CZZZ,
+    0xD000 => \&_DZZZ,
 );
 
 sub logging {
@@ -249,26 +250,29 @@ sub _DZZZ {
     
     my $height = $opcode & 0x000f;
     
+    $gpio[0xf] = 0;
+    
     my $row = 0;
     while ($row < $height) {
-        my $curr_row = $memory[$row + $index];
+        my $byte = $memory[$index + $row];
         my $pixel_offset = 0;
         while ($pixel_offset < 8) {
-            my $loc = $x + $pixel_offset + (($y + $row) * 64);
-            $pixel_offset += 1;
-            if (($y + $row) >= 32 || ($x + $pixel_offset - 1) >= 64) {
-                #ignore pixels outside of screen
-                next;
-            }
-            my $mask = 1 << 8 - $pixel_offset;
-            my $curr_pixel = ($curr_row & $mask) >> (8 - $pixel_offset);
-            $display_buffer[$loc] ^= $curr_pixel;
-            if ($display_buffer[$loc] == 0) {
-                $gpio[0xf] = 1;
-            }
-            else {
-                $gpio[0xf] = 0;
-            }
+            #the value of the bit in the sprite
+            my $bit = ($byte >> $pixel_offset) & 0x1;
+            #the value of the current pixel on screen
+            my $current_pixel_y = ($y + $row) * 64;
+            my $current_pixel_x = $x + $pixel_offset;
+            
+            my $current_pixel = $display_buffer[($current_pixel_y +
+                $current_pixel_x) % (64 * 32)];
+            $current_pixel &= 0x1;
+            
+            $gpio[0xf] = 1 if ($bit && $current_pixel);
+            
+            $display_buffer[($current_pixel_y +
+                $current_pixel_x) % (64 * 32)] = $current_pixel ^ $bit;
+            
+            $pixel_offset++;
         }
         $row += 1;
     }
