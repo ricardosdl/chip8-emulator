@@ -376,14 +376,6 @@ sub test_1_DZZZ {
     CHIP8::logging(1);
     CHIP8::cycle;
     
-    for my $x (0..63) {
-        for my $y (0..31) {
-            my $pixel = CHIP8::get_display_buffer_at($x, $y);
-            say "Pos at $x, $y <<<", $pixel, ">>>" if $pixel;
-        }
-        
-    }
-    
     #the display buffer is a linear array of 64 * 32 pixels
     return CHIP8::get_display_buffer_at(0x1c, 0xd) == 1;
 }

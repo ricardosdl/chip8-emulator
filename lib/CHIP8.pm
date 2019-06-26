@@ -253,38 +253,32 @@ sub _FZ29 {
 sub _DZZZ {
     log_message("Draw sprite...");
     my $x = $gpio[$vx] & 0xff;
-    say "<<<x:", $x, ">>>";
     my $y = $gpio[$vy] & 0xff;
-    say "<<<y:", $y, ">>>";
     
     my $height = $opcode & 0x000f;
-    say "<<<height:$height>>>";
     
     $gpio[0xf] = 0;
     
     my $row = 0;
-    say "<<<index:$index>>>";
     while ($row < $height) {
         my $byte = $memory[$index + $row];
-        say "<<<byte:$byte>>>" unless $row;
         my $pixel_offset = 0;
         while ($pixel_offset < 8) {
             #the value of the bit in the sprite
             my $bit = ($byte >> $pixel_offset) & 0x1;
-            say "<<<bit:$bit>>>" if ($row == 0 && $pixel_offset == 0);
-            #the value of the current pixel on screen
-            my $current_pixel_y = ($y + $row) * 64;
-            say "<<<current_pixel_y:$current_pixel_y>>>" unless $row;
-            my $current_pixel_x = $x + $pixel_offset;
             
+            my $current_pixel_x = $x + (7 - $pixel_offset);
+            my $current_pixel_y = ($y + $row) * 64;
+            
+            #the value of the current pixel on screen
             my $current_pixel = $display_buffer[($current_pixel_y +
-                $current_pixel_x) % ($NUM_PIXELS)];
+                $current_pixel_x) % $NUM_PIXELS];
             #$current_pixel &= 0x1;
             
             $gpio[0xf] = 1 if ($bit && $current_pixel);
             
             $display_buffer[($current_pixel_y +
-                $current_pixel_x) % (64 * 32)] = $current_pixel ^ $bit;
+                $current_pixel_x) % $NUM_PIXELS] = $current_pixel ^ $bit;
             
             $pixel_offset++;
         }
