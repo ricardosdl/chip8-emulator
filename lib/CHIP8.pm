@@ -6,7 +6,7 @@ use Fonts;
 
 use Exporter qw(import);
 our @EXPORT = qw (get_register_value set_register_value get_pc_value initialize
-    get_index_value
+    get_index_value get_display_buffer_at
     _6ZZZ
     _7ZZZ
     _8ZZ0
@@ -19,7 +19,10 @@ our @EXPORT = qw (get_register_value set_register_value get_pc_value initialize
     _8ZZ7);
 
 my @key_inputs = (0) x 16;
-my @display_buffer = (0) x (64 * 32);
+my $SCREEN_WIDTH = 64;
+my $SCREEN_HEIGHT = 32;
+my $NUM_PIXELS = $SCREEN_WIDTH * $SCREEN_HEIGHT;
+my @display_buffer = (0) x $NUM_PIXELS;
 my @memory = (0) x 4096;
 my @gpio = (0) x 16;#16 8-bit registers
 my $sound_timer = 0;
@@ -88,6 +91,11 @@ sub get_pc_value {
 
 sub get_index_value {
     return $index;
+}
+
+sub get_display_buffer_at {
+    my ($x, $y) = @_;
+    return $display_buffer[(64 * $y + $x) % $NUM_PIXELS];
 }
 
 #chip8 instructions
@@ -244,28 +252,34 @@ sub _FZ29 {
 
 sub _DZZZ {
     log_message("Draw sprite...");
-    $gpio[0xf] = 0;
     my $x = $gpio[$vx] & 0xff;
+    say "<<<x:", $x, ">>>";
     my $y = $gpio[$vy] & 0xff;
+    say "<<<y:", $y, ">>>";
     
     my $height = $opcode & 0x000f;
+    say "<<<height:$height>>>";
     
     $gpio[0xf] = 0;
     
     my $row = 0;
+    say "<<<index:$index>>>";
     while ($row < $height) {
         my $byte = $memory[$index + $row];
+        say "<<<byte:$byte>>>" unless $row;
         my $pixel_offset = 0;
         while ($pixel_offset < 8) {
             #the value of the bit in the sprite
             my $bit = ($byte >> $pixel_offset) & 0x1;
+            say "<<<bit:$bit>>>" if ($row == 0 && $pixel_offset == 0);
             #the value of the current pixel on screen
             my $current_pixel_y = ($y + $row) * 64;
+            say "<<<current_pixel_y:$current_pixel_y>>>" unless $row;
             my $current_pixel_x = $x + $pixel_offset;
             
             my $current_pixel = $display_buffer[($current_pixel_y +
-                $current_pixel_x) % (64 * 32)];
-            $current_pixel &= 0x1;
+                $current_pixel_x) % ($NUM_PIXELS)];
+            #$current_pixel &= 0x1;
             
             $gpio[0xf] = 1 if ($bit && $current_pixel);
             

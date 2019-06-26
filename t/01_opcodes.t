@@ -2,9 +2,9 @@ use strict;
 use warnings;
 use 5.010;
  
-use Test::Simple tests => 23;
+use Test::Simple tests => 24;
  
-use CHIP8 qw(get_register_value initialize get_pc_value
+use CHIP8 qw(get_register_value initialize get_pc_value get_display_buffer_at
     _6ZZZ
     _7ZZZ
     _8ZZ0
@@ -363,7 +363,29 @@ sub test_CZZZ {
 }
 
 sub test_1_DZZZ {
-    return 0;
+    CHIP8::initialize(0);
+    
+    #sets V1(vx) to 0x1c and V2(vy) to 0xd then
+    #load the adress of the font 0x2 into the index register then
+    #draws the sprite 0x2 in the middle of the screen
+    my @rom_bytes = (0x61, 0x1c, 0x62, 0xd, 0xa0, 0xa, 0xd1, 0x25);
+    CHIP8::load_rom_from_array(@rom_bytes);
+    CHIP8::cycle;
+    CHIP8::cycle;
+    CHIP8::cycle;
+    CHIP8::logging(1);
+    CHIP8::cycle;
+    
+    for my $x (0..63) {
+        for my $y (0..31) {
+            my $pixel = CHIP8::get_display_buffer_at($x, $y);
+            say "Pos at $x, $y <<<", $pixel, ">>>" if $pixel;
+        }
+        
+    }
+    
+    #the display buffer is a linear array of 64 * 32 pixels
+    return CHIP8::get_display_buffer_at(0x1c, 0xd) == 1;
 }
 
 ok(test_6ZZZ);
