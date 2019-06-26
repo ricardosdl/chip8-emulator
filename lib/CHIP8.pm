@@ -267,18 +267,18 @@ sub _DZZZ {
             #the value of the bit in the sprite
             my $bit = ($byte >> $pixel_offset) & 0x1;
             
-            my $current_pixel_x = $x + (7 - $pixel_offset);
-            my $current_pixel_y = ($y + $row) * 64;
+            my $current_pixel_x = ($x + (7 - $pixel_offset)) % $SCREEN_WIDTH;
+            my $current_pixel_y = (($y + $row) % $SCREEN_HEIGHT) * 64;
             
             #the value of the current pixel on screen
             my $current_pixel = $display_buffer[($current_pixel_y +
-                $current_pixel_x) % $NUM_PIXELS];
+                $current_pixel_x)];
             #$current_pixel &= 0x1;
             
             $gpio[0xf] = 1 if ($bit && $current_pixel);
             
             $display_buffer[($current_pixel_y +
-                $current_pixel_x) % $NUM_PIXELS] = $current_pixel ^ $bit;
+                $current_pixel_x)] = $current_pixel ^ $bit;
             
             $pixel_offset++;
         }
