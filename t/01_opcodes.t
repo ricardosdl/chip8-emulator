@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use 5.010;
  
-use Test::Simple tests => 24;
+use Test::Simple tests => 26;
  
 use CHIP8 qw(get_register_value initialize get_pc_value get_display_buffer_at
     _6ZZZ
@@ -363,6 +363,7 @@ sub test_CZZZ {
 }
 
 sub test_1_DZZZ {
+    #tests drawing a sprite in the screen with no collision
     CHIP8::initialize(0);
     
     #sets V1(vx) to 0x1c and V2(vy) to 0xd then
@@ -377,8 +378,60 @@ sub test_1_DZZZ {
     CHIP8::cycle;
     
     #the display buffer is a linear array of 64 * 32 pixels
-    return CHIP8::get_display_buffer_at(0x1c, 0xd) == 1;
+    return CHIP8::get_display_buffer_at(0x1c, 0xd) == 1 &&
+        CHIP8::get_register_value(0xf) == 0;
 }
+
+sub test_2_DZZZ {
+    #checks if the collision register is set
+    CHIP8::initialize(0);
+    
+    #sets V1(vx) to 0x1c and V2(vy) to 0xd then
+    #load the adress of the font 0x2 into the index register then
+    #draws the sprite 0x2 in the middle of the screen
+    my @rom_bytes = (0x61, 0x1c, 0x62, 0xd, 0xa0, 0xa, 0xd1, 0x25);
+    
+    #sets V1(vx) 0x19 and V2(vy) to 0xd then
+    #load the address of the font 0x0 into the index register then
+    #draws the sprite 0x0 a little to the left of the middle of the screen
+    my @more_rom_bytes = (0x61, 0x19, 0x62, 0xd, 0xa0, 0x0, 0xd1, 0x25);
+    
+    push @rom_bytes, @more_rom_bytes;
+    
+    CHIP8::load_rom_from_array(@rom_bytes);
+    CHIP8::cycle;
+    CHIP8::cycle;
+    CHIP8::cycle;
+    CHIP8::cycle;
+    CHIP8::logging(1);
+    CHIP8::cycle;
+    CHIP8::cycle;
+    CHIP8::cycle;
+    CHIP8::cycle;
+    
+    #the display buffer is a linear array of 64 * 32 pixels
+    return CHIP8::get_register_value(0xf) == 1;
+}
+
+sub test_3_DZZZ {
+    #tests drawing a sprite in the screen with horizontal wrap
+    CHIP8::initialize(0);
+    
+    #sets V1(vx) to 0x3d and V2(vy) to 0xd then
+    #load the adress of the font 0x3 into the index register then
+    #draws the sprite 0x3 far right end of the screen
+    my @rom_bytes = (0x61, 0x3d, 0x62, 0xd, 0xa0, 0xf, 0xd1, 0x25);
+    CHIP8::load_rom_from_array(@rom_bytes);
+    CHIP8::cycle;
+    CHIP8::cycle;
+    CHIP8::cycle;
+    CHIP8::logging(1);
+    CHIP8::cycle;
+    
+    #the right side of the 0x3 sprite went to the start of the screen?
+    return CHIP8::get_display_buffer_at(0x0, 0xd) == 1;
+}
+
 
 ok(test_6ZZZ);
 ok(test_1_7ZZZ);
@@ -404,3 +457,5 @@ ok(test_AZZZ);
 ok(test_BZZZ);
 ok(test_CZZZ);
 ok(test_1_DZZZ);
+ok(test_2_DZZZ);
+ok(test_3_DZZZ);
