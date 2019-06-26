@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use 5.010;
  
-use Test::Simple tests => 26;
+use Test::Simple tests => 27;
  
 use CHIP8 qw(get_register_value initialize get_pc_value get_display_buffer_at
     _6ZZZ
@@ -432,6 +432,11 @@ sub test_3_DZZZ {
     return CHIP8::get_display_buffer_at(0x0, 0xd) == 1;
 }
 
+sub test_4_DZZZ {
+    #tests the drawing with vertical wrap
+    return 0;
+}
+
 
 ok(test_6ZZZ);
 ok(test_1_7ZZZ);
@@ -459,3 +464,4 @@ ok(test_CZZZ);
 ok(test_1_DZZZ);
 ok(test_2_DZZZ);
 ok(test_3_DZZZ);
+ok(test_4_DZZZ);
