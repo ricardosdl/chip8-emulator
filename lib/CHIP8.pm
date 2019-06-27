@@ -6,7 +6,7 @@ use Fonts;
 
 use Exporter qw(import);
 our @EXPORT = qw (get_register_value set_register_value get_pc_value initialize
-    get_index_value get_display_buffer_at
+    get_index_value get_display_buffer_at get_key_input set_key_input
     _6ZZZ
     _7ZZZ
     _8ZZ0
@@ -58,6 +58,12 @@ my %func_map = (
     0xB000 => \&_BZZZ,
     0xC000 => \&_CZZZ,
     0xD000 => \&_DZZZ,
+    0xE000 => \&_EZZZ,
+    0xE00E => \&_EZZE,
+    0xE001 => \&_EZZ1,
+    0xF000 => \&_FZZZ,
+    0xF007 => \&_FZ07,
+    0xF00A => \&_FZ0A,
 );
 
 sub logging {
@@ -96,6 +102,25 @@ sub get_index_value {
 sub get_display_buffer_at {
     my ($x, $y) = @_;
     return $display_buffer[(64 * $y + $x) % $NUM_PIXELS];
+}
+
+sub get_key_input {
+    my ($key) = @_;
+    return $key_inputs[$key];
+}
+
+sub set_key_input {
+    my ($key) = @_;
+    return $key_inputs[$key] = 1;
+}
+
+sub get_delay_timer {
+    return $delay_timer;
+}
+
+sub set_delay_timer {
+    my ($new_delay_timer_value) = @_;
+    $delay_timer = $new_delay_timer_value;
 }
 
 #chip8 instructions
@@ -286,6 +311,48 @@ sub _DZZZ {
     }
     $should_draw = 1;
     
+}
+
+sub _EZZZ {
+    my $extracted_op = $opcode & 0xf00f;
+    #treat errors when op not found
+    $func_map{$extracted_op}();
+}
+
+sub _EZZE {
+    log_message('Skip next instruction if key with the value of Vx is pressed.');
+    my $key = $gpio[$vx] & 0xf;
+    $pc += 2 if $key_inputs[$key];
+}
+
+sub _EZZ1 {
+    log_message('Skip next instruction if key with the value of Vx is not pressed.');
+    my $key = $gpio[$vx] & 0xf;
+    $pc += 2 unless $key_inputs[$key];
+}
+
+sub _FZZZ {
+    my $extracted_op = $opcode & 0xf0ff;
+    #treat errors when op not found
+    $func_map{$extracted_op}();
+}
+
+sub _FZ07 {
+    log_message('Set Vx = delay timer value.');
+    $gpio[$vx] = $delay_timer;
+}
+
+sub _FZ0A {
+    #TODO: write a test for this op code
+    log_message('Wait for a key press, store the value of the key in Vx.');
+    #TODO: get key here
+    my $key = -1;
+    if ($key >= 0) {
+        $gpio[$vx] = $key;
+    }
+    else {
+        $pc -= 2;
+    }
 }
 
 sub clear {

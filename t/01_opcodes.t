@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use 5.010;
  
-use Test::Simple tests => 27;
+use Test::Simple tests => 30;
  
 use CHIP8 qw(get_register_value initialize get_pc_value get_display_buffer_at
     _6ZZZ
@@ -448,12 +448,52 @@ sub test_4_DZZZ {
     CHIP8::cycle;
     
     return CHIP8::get_display_buffer_at(0x1c, 0x0) == 1;
+}
+
+sub test_EZZE {
+    #tests if the next instruction will be skipped if key is pressed
+    CHIP8::initialize(0);
     
+    #stores 0xa in V6(vx) then
+    #skip next instruction if key with the value of Vx is pressed.
+    my @rom_bytes = (0x66, 0xa, 0xe6, 0x9e);
+    CHIP8::load_rom_from_array(@rom_bytes);
+    CHIP8::set_key_input(0xa);
+    CHIP8::cycle;
+    CHIP8::logging(1);
+    my $last_pc = CHIP8::get_pc_value();
+    CHIP8::cycle;
     
+    return CHIP8::get_pc_value() == ($last_pc + 4);
+}
+
+sub test_EZZ1 {
+    #tests if the next instruction will be skipped if key isn't pressed
+    CHIP8::initialize(0);
     
+    #stores 0xa in V6(vx) then
+    #skip next instruction if key with the value of Vx isn't pressed.
+    my @rom_bytes = (0x66, 0xa, 0xe6, 0xa1);
+    CHIP8::load_rom_from_array(@rom_bytes);
+    CHIP8::cycle;
+    CHIP8::logging(1);
+    my $last_pc = CHIP8::get_pc_value();
+    CHIP8::cycle;
     
+    return CHIP8::get_pc_value() == ($last_pc + 4);
+}
+
+sub test_FZ07 {
+     #tests if Vx is set to the value of the delay timer
+     CHIP8::initialize(1);
     
-    return 0;
+    #Set Vx(x=9) to delay timer value.
+    my @rom_bytes = (0xf9, 0x7);
+    CHIP8::load_rom_from_array(@rom_bytes);
+    CHIP8::set_delay_timer(0xf9);
+    CHIP8::cycle;
+    
+    return CHIP8::get_register_value(0x9) == 0xf9;
 }
 
 
@@ -484,3 +524,6 @@ ok(test_1_DZZZ);
 ok(test_2_DZZZ);
 ok(test_3_DZZZ);
 ok(test_4_DZZZ);
+ok(test_EZZE);
+ok(test_EZZ1);
+ok(test_FZ07);
