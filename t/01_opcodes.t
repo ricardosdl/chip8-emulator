@@ -434,6 +434,25 @@ sub test_3_DZZZ {
 
 sub test_4_DZZZ {
     #tests the drawing with vertical wrap
+    
+    CHIP8::initialize(0);
+    #sets V1(vx) to 0x1c and V2(vy) to 0x3e then
+    #load the adress of the font 0xC (0x3c) into the index register then
+    #draws the sprite 0xC near the screen bottom
+    my @rom_bytes = (0x61, 0x1c, 0x62, 0x3e, 0xa0, 0x3c, 0xd1, 0x25);
+    CHIP8::load_rom_from_array(@rom_bytes);
+    CHIP8::cycle;
+    CHIP8::cycle;
+    CHIP8::cycle;
+    CHIP8::logging(1);
+    CHIP8::cycle;
+    
+    return CHIP8::get_display_buffer_at(0x1c, 0x0) == 1;
+    
+    
+    
+    
+    
     return 0;
 }
 
