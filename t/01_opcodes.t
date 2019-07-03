@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use 5.010;
  
-use Test::Simple tests => 35;
+use Test::Simple tests => 36;
  
 use CHIP8 qw(get_register_value initialize get_pc_value get_display_buffer_at
     _6ZZZ
@@ -578,6 +578,28 @@ sub test_FZ29 {
     return CHIP8::get_index_value() == 60;
 }
 
+sub test_FZ33 {
+    #tests if the number 666 (stored in Vx) will be stores in BCD (binary codede decimal)
+    CHIP8::initialize(0);
+    
+    #stores the value 166(0xa6) in Vx (x=3) and then
+    #sets I to the memory location 0xf9b and then
+    #stores the BCD of Vx in I, I + 1 and I + 2
+    my @rom_bytes = (0x63, 0xa6, 0xaf, 0x9b, 0xf3, 0x33);
+    CHIP8::load_rom_from_array(@rom_bytes);
+    CHIP8::cycle;
+    CHIP8::cycle;
+    
+    CHIP8::logging(1);
+    CHIP8::cycle;
+    
+    my $hundreds = CHIP8::get_memory_at(CHIP8::get_index_value());
+    my $tenths = CHIP8::get_memory_at(CHIP8::get_index_value() + 1);
+    my $units = CHIP8::get_memory_at(CHIP8::get_index_value() + 2);
+    
+    return ($hundreds == 1) && ($tenths == 6) && ($units == 6);
+}
+
 
 ok(test_6ZZZ);
 ok(test_1_7ZZZ);
@@ -614,3 +636,4 @@ ok(test_FZ18);
 ok(test_1_FZ1E);
 ok(test_2_FZ1E);
 ok(test_FZ29);
+ok(test_FZ33);

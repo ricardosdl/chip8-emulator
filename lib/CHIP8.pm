@@ -68,6 +68,7 @@ my %func_map = (
     0xF018 => \&_FZ18,
     0xF01E => \&_FZ1E,
     0xF029 => \&_FZ29,
+    0xF033 => \&_FZ33,
 );
 
 sub logging {
@@ -106,6 +107,11 @@ sub get_index_value {
 sub get_display_buffer_at {
     my ($x, $y) = @_;
     return $display_buffer[(64 * $y + $x) % $NUM_PIXELS];
+}
+
+sub get_memory_at {
+    my ($address) = @_;
+    return $memory[$address];
 }
 
 sub get_key_input {
@@ -378,6 +384,13 @@ sub _FZ1E {
 sub _FZ29 {
     log_message("Set index to point to a character");
     $index = (5 * $gpio[$vx]) & 0xfff;
+}
+
+sub _FZ33 {
+    log_message('Store BCD representation of Vx in memory locations I, I+1, and I+2.');
+    $memory[$index] = int($gpio[$vx] / 100);
+    $memory[$index + 1] = int(($gpio[$vx] % 100) / 10);
+    $memory[$index + 2] = $gpio[$vx] % 10;
 }
 
 sub clear {
