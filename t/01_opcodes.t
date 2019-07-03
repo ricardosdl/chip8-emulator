@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use 5.010;
  
-use Test::Simple tests => 34;
+use Test::Simple tests => 35;
  
 use CHIP8 qw(get_register_value initialize get_pc_value get_display_buffer_at
     _6ZZZ
@@ -564,6 +564,20 @@ sub test_2_FZ1E {
         (CHIP8::get_register_value(0xf) == 1);
 }
 
+sub test_FZ29 {
+    #tests if the index is pointing to the character indicated by Vx
+    CHIP8::initialize(0);
+    #stores the value 0xc in Vx (x=4) and then
+    #Set I = location of sprite for digit Vx.
+    my @rom_bytes = (0x64, 0xc, 0xf4, 0x29);
+    CHIP8::load_rom_from_array(@rom_bytes);
+    CHIP8::cycle;
+    CHIP8::logging(1);
+    CHIP8::cycle;
+    
+    return CHIP8::get_index_value() == 60;
+}
+
 
 ok(test_6ZZZ);
 ok(test_1_7ZZZ);
@@ -599,3 +613,4 @@ ok(test_FZ15);
 ok(test_FZ18);
 ok(test_1_FZ1E);
 ok(test_2_FZ1E);
+ok(test_FZ29);

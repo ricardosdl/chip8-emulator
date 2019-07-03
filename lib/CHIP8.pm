@@ -67,6 +67,7 @@ my %func_map = (
     0xF015 => \&_FZ15,
     0xF018 => \&_FZ18,
     0xF01E => \&_FZ1E,
+    0xF029 => \&_FZ29,
 );
 
 sub logging {
@@ -277,11 +278,6 @@ sub _CZZZ {
     $gpio[$vx] &= 0xff;
 }
 
-sub _FZ29 {
-    log_message("Set index to point to a character");
-    $index = (5 * $gpio[$vx]) & 0xfff;
-}
-
 sub _DZZZ {
     log_message("Draw sprite...");
     my $x = $gpio[$vx] & 0xff;
@@ -377,6 +373,11 @@ sub _FZ1E {
     $gpio[0xf] = ($index + $gpio[$vx]) > 0xfff ? 1 : 0;
     $index += $gpio[$vx];
     $index &= 0xfff;
+}
+
+sub _FZ29 {
+    log_message("Set index to point to a character");
+    $index = (5 * $gpio[$vx]) & 0xfff;
 }
 
 sub clear {
