@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use 5.010;
  
-use Test::Simple tests => 31;
+use Test::Simple tests => 34;
  
 use CHIP8 qw(get_register_value initialize get_pc_value get_display_buffer_at
     _6ZZZ
@@ -510,9 +510,58 @@ sub test_FZ15 {
     
     #the cycle will always decrement the delay timer by one
     return (CHIP8::get_delay_timer() + 1) == 0x8f;
+}
+
+sub test_FZ18 {
+    #tests if the sound timer was set to Vx
     
+    CHIP8::initialize();
     
+    #stores the value 0x65 in Vd and then
+    #stores the value of Vd in the sound timer
+    my @rom_bytes = (0x6d, 0x65, 0xfd, 0x18);
+    CHIP8::load_rom_from_array(@rom_bytes);
+    CHIP8::cycle;
+    CHIP8::logging(1);
+    CHIP8::cycle;
     
+    return (CHIP8::get_sound_timer() + 1) == 0x65;
+}
+
+sub test_1_FZ1E {
+    #tests adding Vx to the index register
+    CHIP8::initialize;
+    
+    #sets the value of Vx(x=3) to 0x56 and then
+    #stores the value 0xf09 in I
+    #set the value of index(I) to I  = I + Vx
+    my @rom_bytes = (0x63, 0x56, 0xaf, 0x9, 0xf3, 0x1e);
+    CHIP8::load_rom_from_array(@rom_bytes);
+    CHIP8::cycle;
+    CHIP8::cycle;
+    CHIP8::logging(1);
+    CHIP8::cycle;
+    
+    return (CHIP8::get_index_value() == (0xf09 + 0x56)) &&
+        (CHIP8::get_register_value(0xf) == 0);
+}
+
+sub test_2_FZ1E {
+    #tests adding Vx to the index register with overflow
+    CHIP8::initialize;
+    
+    #sets the value of Vx(x=3) to 0x56 and then
+    #stores the value 0xfb9 in I
+    #set the value of index(I) to I  = I + Vx
+    my @rom_bytes = (0x63, 0x56, 0xaf, 0xb9, 0xf3, 0x1e);
+    CHIP8::load_rom_from_array(@rom_bytes);
+    CHIP8::cycle;
+    CHIP8::cycle;
+    CHIP8::logging(1);
+    CHIP8::cycle;
+    
+    return (CHIP8::get_index_value() == 0x10) &&
+        (CHIP8::get_register_value(0xf) == 1);
 }
 
 
@@ -547,3 +596,6 @@ ok(test_EZZE);
 ok(test_EZZ1);
 ok(test_FZ07);
 ok(test_FZ15);
+ok(test_FZ18);
+ok(test_1_FZ1E);
+ok(test_2_FZ1E);

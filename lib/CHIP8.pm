@@ -65,6 +65,8 @@ my %func_map = (
     0xF007 => \&_FZ07,
     0xF00A => \&_FZ0A,
     0xF015 => \&_FZ15,
+    0xF018 => \&_FZ18,
+    0xF01E => \&_FZ1E,
 );
 
 sub logging {
@@ -117,6 +119,10 @@ sub set_key_input {
 
 sub get_delay_timer {
     return $delay_timer;
+}
+
+sub get_sound_timer {
+    return $sound_timer;
 }
 
 sub set_delay_timer {
@@ -359,6 +365,18 @@ sub _FZ0A {
 sub _FZ15 {
     log_message('Set delay timer = Vx.');
     $delay_timer = $gpio[$vx];
+}
+
+sub _FZ18 {
+    log_message('Set sound timer = Vx.');
+    $sound_timer = $gpio[$vx];
+}
+
+sub _FZ1E {
+    log_message('Set I = I + Vx. if overflow Vf is set to 1');
+    $gpio[0xf] = ($index + $gpio[$vx]) > 0xfff ? 1 : 0;
+    $index += $gpio[$vx];
+    $index &= 0xfff;
 }
 
 sub clear {
