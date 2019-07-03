@@ -548,7 +548,7 @@ sub test_1_FZ1E {
 
 sub test_2_FZ1E {
     #tests adding Vx to the index register with overflow
-    CHIP8::initialize;
+    CHIP8::initialize(0);
     
     #sets the value of Vx(x=3) to 0x56 and then
     #stores the value 0xfb9 in I
@@ -560,7 +560,7 @@ sub test_2_FZ1E {
     CHIP8::logging(1);
     CHIP8::cycle;
     
-    return (CHIP8::get_index_value() == 0x10) &&
+    return (CHIP8::get_index_value() == 0xf) &&
         (CHIP8::get_register_value(0xf) == 1);
 }
 
