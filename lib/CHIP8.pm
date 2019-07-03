@@ -64,6 +64,7 @@ my %func_map = (
     0xF000 => \&_FZZZ,
     0xF007 => \&_FZ07,
     0xF00A => \&_FZ0A,
+    0xF015 => \&_FZ15,
 );
 
 sub logging {
@@ -353,6 +354,11 @@ sub _FZ0A {
     else {
         $pc -= 2;
     }
+}
+
+sub _FZ15 {
+    log_message('Set delay timer = Vx.');
+    $delay_timer = $gpio[$vx];
 }
 
 sub clear {

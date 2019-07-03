@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use 5.010;
  
-use Test::Simple tests => 30;
+use Test::Simple tests => 31;
  
 use CHIP8 qw(get_register_value initialize get_pc_value get_display_buffer_at
     _6ZZZ
@@ -484,8 +484,8 @@ sub test_EZZ1 {
 }
 
 sub test_FZ07 {
-     #tests if Vx is set to the value of the delay timer
-     CHIP8::initialize(1);
+    #tests if Vx is set to the value of the delay timer
+    CHIP8::initialize(1);
     
     #Set Vx(x=9) to delay timer value.
     my @rom_bytes = (0xf9, 0x7);
@@ -494,6 +494,25 @@ sub test_FZ07 {
     CHIP8::cycle;
     
     return CHIP8::get_register_value(0x9) == 0xf9;
+}
+
+sub test_FZ15 {
+    #tests if the delay timer value was copied to Vx
+    CHIP8::initialize();
+    
+    #stores the value 0x8f in V8 and then
+    #copy the value of Vx (x=8) to the delay timer
+    my @rom_bytes = (0x68, 0x8f, 0xf8, 0x15);
+    CHIP8::load_rom_from_array(@rom_bytes);
+    CHIP8::cycle;
+    CHIP8::logging(1);
+    CHIP8::cycle;
+    
+    #the cycle will always decrement the delay timer by one
+    return (CHIP8::get_delay_timer() + 1) == 0x8f;
+    
+    
+    
 }
 
 
@@ -527,3 +546,4 @@ ok(test_4_DZZZ);
 ok(test_EZZE);
 ok(test_EZZ1);
 ok(test_FZ07);
+ok(test_FZ15);
