@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use 5.010;
  
-use Test::Simple tests => 37;
+use Test::Simple tests => 38;
  
 use CHIP8 qw(get_register_value initialize get_pc_value get_display_buffer_at
     _6ZZZ
@@ -629,6 +629,44 @@ sub test_FZ55 {
         ($third_value == 12);
 }
 
+sub test_FZ65 {
+    #tests if the values from memory, starting at I through Vx
+    #will be copied to V0 through Vx
+    CHIP8::initialize(0);
+    
+    my @rom_bytes = (
+        #stores the values 42, 22 and 12 at V0, V1 and V2
+        0x60, 0x2a, 0x61, 0x16, 0x62, 0x0c,
+        #sets I to the memory location 0xf9b and then
+        0xaf, 0x9b,
+        #stores the registsers V0 through V2 starting at I and then
+        0xf2, 0x55,
+        #set the registers V0 through V2 to zero and then
+        0x60, 0x00, 0x61, 0x00, 0x62, 0x00,
+        #sets I to the memory location 0xf9b
+        0xaf, 0x9b,
+        #Set the values of V0 through V2 to the values of I(0xf9b), I + 1,
+        #I + 2
+        0xf2, 0x65
+    );
+    
+    CHIP8::load_rom_from_array(@rom_bytes);
+    
+    foreach my $i(0..8) {
+        CHIP8::cycle();
+    }
+    
+    CHIP8::logging(1);
+    CHIP8::cycle();
+    
+    my ($first_value, $second_value, $third_value);
+    $first_value = CHIP8::get_register_value(0);
+    $second_value = CHIP8::get_register_value(1);
+    $third_value = CHIP8::get_register_value(2);
+    
+    return ($first_value == 42) && ($second_value == 22) && ($third_value == 12);
+}
+
 
 ok(test_6ZZZ);
 ok(test_1_7ZZZ);
@@ -667,3 +705,4 @@ ok(test_2_FZ1E);
 ok(test_FZ29);
 ok(test_FZ33);
 ok(test_FZ55);
+ok(test_FZ65);

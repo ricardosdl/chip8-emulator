@@ -70,6 +70,7 @@ my %func_map = (
     0xF029 => \&_FZ29,
     0xF033 => \&_FZ33,
     0xF055 => \&_FZ55,
+    0xF065 => \&_FZ65
 );
 
 sub logging {
@@ -399,6 +400,16 @@ sub _FZ55 {
     my $i = 0;
     while($i <= $vx) {
         $memory[$index + $i] = $gpio[$i];
+        $i = $i + 1;
+    }
+    $index = $index + $i + 1;
+}
+
+sub _FZ65 {
+    log_message('Read registers V0 through Vx from memory starting at location I.');
+    my $i = 0;
+    while($i <= $vx) {
+        $gpio[$i] = $memory[$index + $i];
         $i = $i + 1;
     }
     $index = $index + $i + 1;
