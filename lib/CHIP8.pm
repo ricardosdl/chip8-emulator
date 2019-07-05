@@ -69,6 +69,7 @@ my %func_map = (
     0xF01E => \&_FZ1E,
     0xF029 => \&_FZ29,
     0xF033 => \&_FZ33,
+    0xF055 => \&_FZ55,
 );
 
 sub logging {
@@ -391,6 +392,16 @@ sub _FZ33 {
     $memory[$index] = int($gpio[$vx] / 100);
     $memory[$index + 1] = int(($gpio[$vx] % 100) / 10);
     $memory[$index + 2] = $gpio[$vx] % 10;
+}
+
+sub _FZ55 {
+    log_message('Store registers V0 through Vx in memory starting at location I.');
+    my $i = 0;
+    while($i <= $vx) {
+        $memory[$index + $i] = $gpio[$i];
+        $i = $i + 1;
+    }
+    $index = $index + $i + 1;
 }
 
 sub clear {

@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use 5.010;
  
-use Test::Simple tests => 36;
+use Test::Simple tests => 37;
  
 use CHIP8 qw(get_register_value initialize get_pc_value get_display_buffer_at
     _6ZZZ
@@ -600,6 +600,35 @@ sub test_FZ33 {
     return ($hundreds == 1) && ($tenths == 6) && ($units == 6);
 }
 
+sub test_FZ55 {
+    #tests if the registers from V0 to Vx will be copied to the locations
+    #I through I + Vx
+    CHIP8::initialize(0);
+    
+    #stores the values 42, 22 and 12 at V0, V1 and V2
+    #sets I to the memory location 0xf9b and then
+    #stores the registsers V0 through V2 starting at I
+    my @rom_bytes = (0x60, 0x2a, 0x61, 0x16, 0x62, 0xc,
+        0xaf, 0x9b, 0xf2, 0x55
+    );
+    CHIP8::load_rom_from_array(@rom_bytes);
+    
+    #executes all but the last instruction
+    foreach my $i (0..3) {
+        CHIP8::cycle();
+    }
+    
+    CHIP8::logging(1);
+    CHIP8::cycle();
+    
+    my $first_value = CHIP8::get_memory_at(0xf9b);
+    my $second_value = CHIP8::get_memory_at(0xf9b + 1);
+    my $third_value = CHIP8::get_memory_at(0xf9b + 2);
+    
+    return ($first_value == 42) && ($second_value == 22) &&
+        ($third_value == 12);
+}
+
 
 ok(test_6ZZZ);
 ok(test_1_7ZZZ);
@@ -637,3 +666,4 @@ ok(test_1_FZ1E);
 ok(test_2_FZ1E);
 ok(test_FZ29);
 ok(test_FZ33);
+ok(test_FZ55);
