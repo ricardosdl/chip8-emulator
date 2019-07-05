@@ -7,16 +7,7 @@ use Fonts;
 use Exporter qw(import);
 our @EXPORT = qw (get_register_value set_register_value get_pc_value initialize
     get_index_value get_display_buffer_at get_key_input set_key_input
-    _6ZZZ
-    _7ZZZ
-    _8ZZ0
-    _8ZZ1
-    _8ZZ2
-    _8ZZ3
-    _8ZZ4
-    _8ZZ5
-    _8ZZ6
-    _8ZZ7);
+);
 
 my @key_inputs = (0) x 16;
 my $SCREEN_WIDTH = 64;

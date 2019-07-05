@@ -4,17 +4,7 @@ use 5.010;
  
 use Test::Simple tests => 38;
  
-use CHIP8 qw(get_register_value initialize get_pc_value get_display_buffer_at
-    _6ZZZ
-    _7ZZZ
-    _8ZZ0
-    _8ZZ1
-    _8ZZ2
-    _8ZZ3
-    _8ZZ4
-    _8ZZ5
-    _8ZZ6
-    _8ZZ7);
+use CHIP8 qw(get_register_value initialize get_pc_value get_display_buffer_at);
     
 sub test_6ZZZ {
     CHIP8::initialize;
