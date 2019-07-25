@@ -7,6 +7,7 @@ use Fonts;
 use Exporter qw(import);
 our @EXPORT = qw (get_register_value set_register_value get_pc_value initialize
     get_index_value get_display_buffer_at get_key_input set_key_input
+    load_rom_from_file
 );
 
 my @key_inputs = (0) x 16;
